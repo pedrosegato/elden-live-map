@@ -11,6 +11,7 @@ const dllCandidates = [
   join(root, "mod", "target", "release", "elden_live_map.dll"),
 ];
 const STORED_EXTENSIONS = ".webp:.pmtiles:.png";
+const DEV_ONLY_DATA = ["icon-audit.json"];
 
 function fail(message: string): never {
   console.error(message);
@@ -48,12 +49,12 @@ const archive = join(root, "release", `${name}.zip`);
 rmSync(stage, { recursive: true, force: true });
 rmSync(archive, { force: true });
 
-const mods = join(stage, "mods");
-mkdirSync(mods, { recursive: true });
-linkTree(dll, join(mods, "elden_live_map.dll"));
-linkTree(datasetDir, join(mods, "elden-live-map", "data"));
+mkdirSync(stage, { recursive: true });
+linkTree(dll, join(stage, "elden_live_map.dll"));
+linkTree(datasetDir, join(stage, "elden-live-map", "data"));
+for (const devOnly of DEV_ONLY_DATA) rmSync(join(stage, "elden-live-map", "data", devOnly), { force: true });
 
 mkdirSync(dirname(archive), { recursive: true });
-execFileSync("zip", ["-r", "-q", "-n", STORED_EXTENSIONS, archive, "mods"], { cwd: stage, stdio: "inherit" });
+execFileSync("zip", ["-r", "-q", "-n", STORED_EXTENSIONS, archive, "."], { cwd: stage, stdio: "inherit" });
 rmSync(stage, { recursive: true, force: true });
 console.log(`${archive} (${(statSync(archive).size / 1e6).toFixed(0)} MB)`);
