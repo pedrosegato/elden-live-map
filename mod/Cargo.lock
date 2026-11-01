@@ -226,8 +226,11 @@ name = "elden-live-map"
 version = "0.1.0"
 dependencies = [
  "axum",
- "eldenring",
- "fromsoftware-shared",
+ "eldenring 0.14.0 (git+https://github.com/vswarte/fromsoftware-rs?rev=57023153d786c4b13fe95d9170e6dcd9d35093ea)",
+ "eldenring 0.14.0 (git+https://github.com/vswarte/fromsoftware-rs?rev=acc9da0d1aae526982e9a76846e80b7b63ef13ef)",
+ "fromsoftware-shared 0.14.0 (git+https://github.com/vswarte/fromsoftware-rs?rev=57023153d786c4b13fe95d9170e6dcd9d35093ea)",
+ "fromsoftware-shared 0.14.0 (git+https://github.com/vswarte/fromsoftware-rs?rev=acc9da0d1aae526982e9a76846e80b7b63ef13ef)",
+ "pelite",
  "rust-embed",
  "serde",
  "serde_json",
@@ -244,8 +247,26 @@ dependencies = [
  "bitfield",
  "bitflags",
  "encoding_rs",
- "fromsoftware-shared",
- "fromsoftware-shared-stl",
+ "fromsoftware-shared 0.14.0 (git+https://github.com/vswarte/fromsoftware-rs?rev=57023153d786c4b13fe95d9170e6dcd9d35093ea)",
+ "fromsoftware-shared-stl 0.14.0 (git+https://github.com/vswarte/fromsoftware-rs?rev=57023153d786c4b13fe95d9170e6dcd9d35093ea)",
+ "glam",
+ "num_enum",
+ "pelite",
+ "thiserror",
+ "vtable-rs",
+ "windows",
+]
+
+[[package]]
+name = "eldenring"
+version = "0.14.0"
+source = "git+https://github.com/vswarte/fromsoftware-rs?rev=acc9da0d1aae526982e9a76846e80b7b63ef13ef#acc9da0d1aae526982e9a76846e80b7b63ef13ef"
+dependencies = [
+ "bitfield",
+ "bitflags",
+ "encoding_rs",
+ "fromsoftware-shared 0.14.0 (git+https://github.com/vswarte/fromsoftware-rs?rev=acc9da0d1aae526982e9a76846e80b7b63ef13ef)",
+ "fromsoftware-shared-stl 0.14.0 (git+https://github.com/vswarte/fromsoftware-rs?rev=acc9da0d1aae526982e9a76846e80b7b63ef13ef)",
  "glam",
  "num_enum",
  "pelite",
@@ -305,7 +326,23 @@ source = "git+https://github.com/vswarte/fromsoftware-rs?rev=57023153d786c4b13fe
 dependencies = [
  "bitflags",
  "from-singleton",
- "fromsoftware-shared-macros",
+ "fromsoftware-shared-macros 0.14.0 (git+https://github.com/vswarte/fromsoftware-rs?rev=57023153d786c4b13fe95d9170e6dcd9d35093ea)",
+ "glam",
+ "pelite",
+ "thiserror",
+ "undname",
+ "vtable-rs",
+ "windows",
+]
+
+[[package]]
+name = "fromsoftware-shared"
+version = "0.14.0"
+source = "git+https://github.com/vswarte/fromsoftware-rs?rev=acc9da0d1aae526982e9a76846e80b7b63ef13ef#acc9da0d1aae526982e9a76846e80b7b63ef13ef"
+dependencies = [
+ "bitflags",
+ "from-singleton",
+ "fromsoftware-shared-macros 0.14.0 (git+https://github.com/vswarte/fromsoftware-rs?rev=acc9da0d1aae526982e9a76846e80b7b63ef13ef)",
  "glam",
  "pelite",
  "thiserror",
@@ -326,9 +363,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "fromsoftware-shared-macros"
+version = "0.14.0"
+source = "git+https://github.com/vswarte/fromsoftware-rs?rev=acc9da0d1aae526982e9a76846e80b7b63ef13ef#acc9da0d1aae526982e9a76846e80b7b63ef13ef"
+dependencies = [
+ "inflections",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
 name = "fromsoftware-shared-stl"
 version = "0.14.0"
 source = "git+https://github.com/vswarte/fromsoftware-rs?rev=57023153d786c4b13fe95d9170e6dcd9d35093ea#57023153d786c4b13fe95d9170e6dcd9d35093ea"
+
+[[package]]
+name = "fromsoftware-shared-stl"
+version = "0.14.0"
+source = "git+https://github.com/vswarte/fromsoftware-rs?rev=acc9da0d1aae526982e9a76846e80b7b63ef13ef#acc9da0d1aae526982e9a76846e80b7b63ef13ef"
 
 [[package]]
 name = "futures-core"

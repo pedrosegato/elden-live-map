@@ -10,8 +10,11 @@ crate-type = ["cdylib"]
 
 [dependencies]
 axum = { version = "0.8", default-features = false, features = ["http1", "json", "tokio"] }
-eldenring = { git = "https://github.com/vswarte/fromsoftware-rs", rev = "57023153d786c4b13fe95d9170e6dcd9d35093ea" }
-fromsoftware-shared = { git = "https://github.com/vswarte/fromsoftware-rs", rev = "57023153d786c4b13fe95d9170e6dcd9d35093ea" }
+eldenring-1-17-1 = { package = "eldenring", git = "https://github.com/vswarte/fromsoftware-rs", rev = "acc9da0d1aae526982e9a76846e80b7b63ef13ef" }
+eldenring-1-17-2 = { package = "eldenring", git = "https://github.com/vswarte/fromsoftware-rs", rev = "57023153d786c4b13fe95d9170e6dcd9d35093ea" }
+fromsoftware-shared-1-17-1 = { package = "fromsoftware-shared", git = "https://github.com/vswarte/fromsoftware-rs", rev = "acc9da0d1aae526982e9a76846e80b7b63ef13ef" }
+fromsoftware-shared-1-17-2 = { package = "fromsoftware-shared", git = "https://github.com/vswarte/fromsoftware-rs", rev = "57023153d786c4b13fe95d9170e6dcd9d35093ea" }
+pelite = "0.10"
 rust-embed = { version = "8", features = ["debug-embed", "mime-guess"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
