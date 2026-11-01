@@ -8,7 +8,7 @@ A mod that shows your character on an interactive map while you play. Open it in
 ## Install
 
 1. Install [Elden Mod Loader](https://www.nexusmods.com/eldenring/mods/117).
-2. Download `elden-live-map-<version>.zip` from [Releases](../../releases) and extract its contents into `ELDEN RING/Game/mods/`.
+2. Download [elden-live-map.zip](https://github.com/pedrosegato/eldenring-web-map/releases/latest/download/elden-live-map.zip) and extract its contents into `ELDEN RING/Game/mods/`.
 3. Start the game, load a save and open `http://localhost:8686`. From another device, use `http://<pc-ip>:8686` and allow the Windows Firewall prompt for private networks.
 
 Play offline with Easy Anti-Cheat disabled.

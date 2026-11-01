@@ -45,7 +45,7 @@ if (!existsSync(join(datasetDir, "manifest.json"))) fail("No dataset in data/dat
 
 const name = `elden-live-map-${version}`;
 const stage = join(root, "release", name);
-const archive = join(root, "release", `${name}.zip`);
+const archive = join(root, "release", "elden-live-map.zip");
 rmSync(stage, { recursive: true, force: true });
 rmSync(archive, { force: true });
 
