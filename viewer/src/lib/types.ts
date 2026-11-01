@@ -66,7 +66,6 @@ export interface CalibrationArea {
 }
 
 export interface Calibration {
-  provisional?: boolean;
   areas: Record<string, CalibrationArea>;
 }
 

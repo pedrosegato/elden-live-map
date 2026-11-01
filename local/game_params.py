@@ -15,6 +15,8 @@ REGULATION_KEY = bytes.fromhex("99BFFC366A6BC8C6F5827D093602D676C42892A01C207FB0
 
 
 POINT_ICON_OFFSET, POINT_TEXT_OFFSET = 0x0C, 0x30
+GRACE_BLOCK_OFFSET, GRACE_POSITION_OFFSET, GRACE_TEXT_OFFSET = 0x20, 0x24, 0x30
+BLOCK_SIZE_METERS = 256
 
 FLAG_IDS, FLAG_NAMES1, FLAG_NAMES2, FLAG_LONG_OFFSETS, FLAG_COMPRESSION = 0x02, 0x04, 0x08, 0x10, 0x20
 
@@ -129,3 +131,17 @@ def map_point_icons() -> dict[str, int]:
         if name and icon_id:
             votes.setdefault(name, Counter())[icon_id] += 1
     return {name: counter.most_common(1)[0][0] for name, counter in votes.items()}
+
+
+def grace_world_positions() -> dict[tuple[str, str], list[tuple[float, float]]]:
+    rows = read_param(read_bnd4(read_regulation())["BonfireWarpParam.param"])
+    names = read_messages("item")["PlaceName"]
+    positions: dict[tuple[str, str], list[tuple[float, float]]] = {}
+    for row in rows.values():
+        area, grid_x, grid_z = row[GRACE_BLOCK_OFFSET : GRACE_BLOCK_OFFSET + 3]
+        x, _, z = struct.unpack_from("<fff", row, GRACE_POSITION_OFFSET)
+        name = names.get(struct.unpack_from("<i", row, GRACE_TEXT_OFFSET)[0])
+        if name:
+            world = (grid_x * BLOCK_SIZE_METERS + x, grid_z * BLOCK_SIZE_METERS + z)
+            positions.setdefault((f"m{area:02d}", name), []).append(world)
+    return positions

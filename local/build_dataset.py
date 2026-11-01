@@ -9,6 +9,7 @@ import urllib.parse
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
+from calibration import calibrate
 from item_icons import apply_item_icons, build_index, export_menu_tabs
 from native_icons import (
     PLAYER_FILES,
@@ -38,8 +39,6 @@ MAPS = {
 }
 LOCATION_LINK = re.compile(r"https?://(?:www\.)?mapgenie\.io/[^\s)\]]*?locationIds=(\d+)[^\s)\]]*")
 COORDINATE_DECIMALS = 7
-TILE_SIZE_METERS = 256
-PROVISIONAL_GRID = {"m60": ((32, 57), (32, 58)), "m61": ((40, 56), (34, 50))}
 FULL_IMAGE_WIDTH = 1920
 FULL_IMAGE_QUALITY = 82
 THUMB_WIDTH = 640
@@ -175,23 +174,6 @@ def write_audit(path: Path, audit: Counter) -> None:
     write_json(path, rows)
 
 
-def provisional_calibration(maps_by_area: dict[str, dict]) -> dict:
-    areas = {}
-    for area, entry in maps_by_area.items():
-        (grid_x0, grid_x1), (grid_z0, grid_z1) = PROVISIONAL_GRID[area]
-        west, south, east, north = entry["tiles"]["bounds"]
-        scale_x = (east - west) / ((grid_x1 - grid_x0) * TILE_SIZE_METERS)
-        scale_z = (north - south) / ((grid_z1 - grid_z0) * TILE_SIZE_METERS)
-        areas[area] = {
-            "map": entry["id"],
-            "matrix": [
-                [scale_x, 0, west - grid_x0 * TILE_SIZE_METERS * scale_x],
-                [0, scale_z, south - grid_z0 * TILE_SIZE_METERS * scale_z],
-            ],
-        }
-    return {"provisional": True, "areas": areas}
-
-
 def build(source: Path, output: Path, skip_tiles: bool) -> None:
     raw_manifest = read_json(source / "manifest.json")
     export_sprites()
@@ -207,6 +189,7 @@ def build(source: Path, output: Path, skip_tiles: bool) -> None:
     audit: Counter = Counter()
     used_item_icons: dict[str, Path] = {}
     manifest_maps = []
+    converted_maps: dict[str, dict] = {}
     for raw in raw_manifest["maps"]:
         map_id = MAPS[raw["slug"]]
         meta = read_json(source / raw["meta"])
@@ -219,6 +202,7 @@ def build(source: Path, output: Path, skip_tiles: bool) -> None:
         used_icons |= {slug for slug in native_icons if sprite_key(slug) in shown}
         audit.update(audit_rows(converted, methods, used_item_icons))
         write_json(output / "maps" / f"{map_id}.json", converted)
+        converted_maps[map_id] = converted
 
         tiles_path = f"tiles/{map_id}.pmtiles"
         entry = {
@@ -255,9 +239,10 @@ def build(source: Path, output: Path, skip_tiles: bool) -> None:
     print(f"player bust centre: {mass_centre(PLAYER_ICONS / 'player-base.png')}")
     optimize_media(source / "media", output / "media")
 
-    maps_by_area = {"m60": manifest_maps[0], "m61": manifest_maps[1]}
     write_audit(output / "icon-audit.json", audit)
-    write_json(output / "calibration.json", provisional_calibration(maps_by_area))
+    areas = {"m60": "lands-between", "m61": "realm-of-shadow"}
+    calibration = calibrate({area: (map_id, converted_maps[map_id]) for area, map_id in areas.items()})
+    write_json(output / "calibration.json", calibration)
     write_json(
         output / "manifest.json",
         {
