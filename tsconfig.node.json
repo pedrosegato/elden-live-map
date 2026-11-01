@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM"],
+    "types": ["node"]
+  },
+  "include": ["viewer/vite.config.ts", "viewer/mockGame.ts", "viewer/markerIcons.ts", "scripts"]
+}
