@@ -38,6 +38,7 @@ pub struct SharedState {
     pub session: watch::Sender<Session>,
     pub position: watch::Sender<Option<PositionSample>>,
     pub debug: Mutex<Value>,
+    pub reader: Mutex<String>,
 }
 
 impl SharedState {
@@ -46,6 +47,13 @@ impl SharedState {
             session: watch::Sender::new(Session::Menu),
             position: watch::Sender::new(None),
             debug: Mutex::new(Value::Null),
+            reader: Mutex::new(String::from("starting")),
+        }
+    }
+
+    pub fn set_reader(&self, status: impl Into<String>) {
+        if let Ok(mut reader) = self.reader.lock() {
+            *reader = status.into();
         }
     }
 

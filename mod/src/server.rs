@@ -124,12 +124,17 @@ fn set_found(app: &App, location_id: u64, found: bool) -> Result<StatusCode, Api
 }
 
 async fn debug(State(app): State<App>) -> Json<Value> {
-    Json(
-        app.shared
-            .debug
-            .lock()
-            .map_or(Value::Null, |debug| debug.clone()),
-    )
+    let reader = app
+        .shared
+        .reader
+        .lock()
+        .map_or_else(|_| String::new(), |reader| reader.clone());
+    let game = app
+        .shared
+        .debug
+        .lock()
+        .map_or(Value::Null, |debug| debug.clone());
+    Json(json!({ "exe": crate::exe_path(), "reader": reader, "game": game }))
 }
 
 async fn viewer_file(uri: Uri) -> Response {
