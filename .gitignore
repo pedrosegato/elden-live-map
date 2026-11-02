@@ -1,4 +1,5 @@
 data/
+local/dump_mapgenie.py
 local/assets/
 local/icons/
 local/.venv/
