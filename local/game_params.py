@@ -16,6 +16,10 @@ REGULATION_KEY = bytes.fromhex("99BFFC366A6BC8C6F5827D093602D676C42892A01C207FB0
 
 POINT_ICON_OFFSET, POINT_TEXT_OFFSET = 0x0C, 0x30
 GRACE_BLOCK_OFFSET, GRACE_POSITION_OFFSET, GRACE_TEXT_OFFSET = 0x20, 0x24, 0x30
+LEGACY_SOURCE_BLOCK_OFFSET, LEGACY_SOURCE_POSITION_OFFSET = 0x04, 0x08
+LEGACY_TARGET_BLOCK_OFFSET, LEGACY_TARGET_POSITION_OFFSET = 0x14, 0x18
+LEGACY_BASE_POINT_OFFSET = 0x24
+GRID_AREAS = {60, 61}
 BLOCK_SIZE_METERS = 256
 
 FLAG_IDS, FLAG_NAMES1, FLAG_NAMES2, FLAG_LONG_OFFSETS, FLAG_COMPRESSION = 0x02, 0x04, 0x08, 0x10, 0x20
@@ -133,15 +137,39 @@ def map_point_icons() -> dict[str, int]:
     return {name: counter.most_common(1)[0][0] for name, counter in votes.items()}
 
 
-def grace_world_positions() -> dict[tuple[str, str], list[tuple[float, float]]]:
+Frame = str
+Point = tuple[float, float]
+
+
+def block_frame(block: bytes, x: float, z: float) -> tuple[Frame, Point]:
+    area, grid_x, grid_z = block[:3]
+    if area in GRID_AREAS:
+        return f"m{area}", (grid_x * BLOCK_SIZE_METERS + x, grid_z * BLOCK_SIZE_METERS + z)
+    return f"m{area:02d}_{grid_x:02d}_{grid_z:02d}", (x, z)
+
+
+def read_block_point(row: bytes, block_offset: int, position_offset: int) -> tuple[Frame, Point]:
+    x, _, z = struct.unpack_from("<fff", row, position_offset)
+    return block_frame(row[block_offset : block_offset + 3], x, z)
+
+
+def grace_positions() -> dict[tuple[Frame, str], list[Point]]:
     rows = read_param(read_bnd4(read_regulation())["BonfireWarpParam.param"])
     names = read_messages("item")["PlaceName"]
-    positions: dict[tuple[str, str], list[tuple[float, float]]] = {}
+    positions: dict[tuple[Frame, str], list[Point]] = {}
     for row in rows.values():
-        area, grid_x, grid_z = row[GRACE_BLOCK_OFFSET : GRACE_BLOCK_OFFSET + 3]
-        x, _, z = struct.unpack_from("<fff", row, GRACE_POSITION_OFFSET)
+        frame, point = read_block_point(row, GRACE_BLOCK_OFFSET, GRACE_POSITION_OFFSET)
         name = names.get(struct.unpack_from("<i", row, GRACE_TEXT_OFFSET)[0])
         if name:
-            world = (grid_x * BLOCK_SIZE_METERS + x, grid_z * BLOCK_SIZE_METERS + z)
-            positions.setdefault((f"m{area:02d}", name), []).append(world)
+            positions.setdefault((frame, name), []).append(point)
     return positions
+
+
+def legacy_links() -> list[tuple[Frame, Frame, Point, bool]]:
+    rows = read_param(read_bnd4(read_regulation())["WorldMapLegacyConvParam.param"])
+    links = []
+    for _, row in sorted(rows.items()):
+        source, (source_x, source_z) = read_block_point(row, LEGACY_SOURCE_BLOCK_OFFSET, LEGACY_SOURCE_POSITION_OFFSET)
+        target, (target_x, target_z) = read_block_point(row, LEGACY_TARGET_BLOCK_OFFSET, LEGACY_TARGET_POSITION_OFFSET)
+        links.append((source, target, (target_x - source_x, target_z - source_z), bool(row[LEGACY_BASE_POINT_OFFSET])))
+    return links

@@ -3,9 +3,10 @@ from __future__ import annotations
 import re
 import statistics
 
-from game_params import grace_world_positions
+from game_params import grace_positions, legacy_links
 
 GRACE_CATEGORY = "Site of Grace"
+UNDERGROUND, UNDERGROUND_PREFIX, UNDERGROUND_GRID = "underground", "m12_", "m60"
 OUTLIER_FACTOR = 4
 TRIM_ROUNDS = 4
 
@@ -63,18 +64,60 @@ def fit(pairs: list[tuple[Point, Point]]) -> tuple[Matrix, list[float]]:
     return matrix, sorted(distance(matrix, pair) * meters_per_unit for pair in inliers)
 
 
+def shifted(matrix: Matrix, shift: Point) -> Matrix:
+    return [[a, b, a * shift[0] + b * shift[1] + c] for a, b, c in matrix]
+
+
+def resolve_frames(links: list, resolved: dict[str, tuple[str, Point]]) -> dict[str, tuple[str, Point]]:
+    while True:
+        found = {}
+        for source, target, (dx, dz), _ in links:
+            if source not in resolved and source not in found and target in resolved:
+                grid, (x, z) = resolved[target]
+                found[source] = (grid, (x + dx, z + dz))
+        if not found:
+            return resolved
+        resolved = resolved | found
+
+
+def legacy_shifts(grids: list[str]) -> dict[str, tuple[str, Point]]:
+    links = sorted(legacy_links(), key=lambda link: not link[3])
+    forward = resolve_frames(links, {grid: (grid, (0.0, 0.0)) for grid in grids})
+    backward = [(target, source, (-dx, -dz), base) for source, target, (dx, dz), base in links]
+    resolved = resolve_frames(backward, forward)
+    return {frame: value for frame, value in resolved.items() if frame not in grids}
+
+
+def fit_group(frame: str, grid: str) -> str:
+    return UNDERGROUND if frame.startswith(UNDERGROUND_PREFIX) else grid
+
+
 def calibrate(maps: dict[str, tuple[str, dict]]) -> dict:
-    graces = {(area, name_key(name)): spots for (area, name), spots in grace_world_positions().items()}
-    areas = {}
-    for area, (map_id, converted) in maps.items():
+    shifts = legacy_shifts(list(maps))
+    graces: dict[tuple[str, str], list[Point]] = {}
+    for (frame, name), spots in grace_positions().items():
+        if frame in maps:
+            group, (dx, dz) = frame, (0.0, 0.0)
+        elif frame.startswith(UNDERGROUND_PREFIX) and frame in shifts:
+            group, (dx, dz) = UNDERGROUND, shifts[frame][1]
+        else:
+            continue
+        graces.setdefault((group, name_key(name)), []).extend((x + dx, z + dz) for x, z in spots)
+    fits = {}
+    for group, (map_id, converted) in {**maps, UNDERGROUND: maps[UNDERGROUND_GRID]}.items():
         grace_categories = {category["id"] for category in converted["categories"] if category["title"] == GRACE_CATEGORY}
         pairs = [
             (spots[0], tuple(location["positions"][0]))
             for location in converted["locations"]
             if location["categoryId"] in grace_categories
-            and len(spots := graces.get((area, name_key(location["title"])), [])) == 1
+            and len(spots := graces.get((group, name_key(location["title"])), [])) == 1
         ]
         matrix, errors = fit(pairs)
-        areas[area] = {"map": map_id, "matrix": matrix}
-        print(f"calibration {area}: {len(errors)} of {len(pairs)} graces, median error {statistics.median(errors):.1f} m, max {errors[-1]:.1f} m")
+        fits[group] = {"map": map_id, "matrix": matrix}
+        print(f"calibration {group}: {len(errors)} of {len(pairs)} graces, median error {statistics.median(errors):.1f} m, max {errors[-1]:.1f} m")
+    areas = {grid: fits[grid] for grid in maps}
+    for frame, (grid, shift) in sorted(shifts.items()):
+        area = fits[fit_group(frame, grid)]
+        areas[frame] = {"map": area["map"], "matrix": shifted(area["matrix"], shift)}
+    print(f"calibration: {len(shifts)} legacy maps placed")
     return {"areas": areas}
